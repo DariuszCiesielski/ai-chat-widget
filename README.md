@@ -121,23 +121,52 @@ Widget wysyła POST request z następującymi danymi:
 
 ### Response (n8n → Widget)
 
-n8n powinien zwrócić JSON w formacie:
+Widget obsługuje **wiele formatów odpowiedzi** z n8n. Możesz użyć dowolnego z poniższych:
 
+**Format 1: Obiekt z polem `response` (zalecany)**
 ```json
 {
     "response": "Odpowiedź od AI"
 }
 ```
 
-lub
-
+**Format 2: Obiekt z polem `message`**
 ```json
 {
     "message": "Odpowiedź od AI"
 }
 ```
 
-Widget automatycznie wyświetli treść z pola `response` lub `message`.
+**Format 3: Obiekt z polem `output`**
+```json
+{
+    "output": "Odpowiedź od AI"
+}
+```
+
+**Format 4: Tablica z obiektem `output`** (typowe dla niektórych node'ów n8n)
+```json
+[
+    {
+        "output": "Odpowiedź od AI"
+    }
+]
+```
+
+**Format 5: OpenAI API format**
+```json
+{
+    "choices": [
+        {
+            "message": {
+                "content": "Odpowiedź od AI"
+            }
+        }
+    ]
+}
+```
+
+Widget automatycznie wykryje i wyświetli odpowiedź w dowolnym z tych formatów.
 
 ## 🔧 Przykładowy workflow n8n
 
@@ -330,13 +359,45 @@ curl -X POST https://twoj-n8n.com/webhook/abc123 \
 3. Sprawdź konflikty z-index w CSS
 4. Sprawdź czy JavaScript jest włączony
 
-### ❌ Brak odpowiedzi AI
+### ❌ "Przepraszam, nie otrzymałem odpowiedzi"
+
+**Przyczyna:** Widget otrzymuje odpowiedź z n8n, ale nie może znaleźć treści wiadomości w znanym formacie.
 
 **Rozwiązanie:**
-1. Sprawdź format odpowiedzi z n8n
-2. Odpowiedź musi zawierać `response` lub `message`
-3. Sprawdź network tab w DevTools
-4. Sprawdź workflow w n8n
+1. **Sprawdź format odpowiedzi w Network Tab (F12)**:
+   - Otwórz DevTools → Network
+   - Wyślij wiadomość w chacie
+   - Kliknij na request do webhooka
+   - Zobacz zakładkę "Response"
+
+2. **Widget obsługuje następujące pola** (w kolejności sprawdzania):
+   - `response` - zalecane
+   - `message`
+   - `output` - typowe dla niektórych node'ów n8n
+   - `text`
+   - `reply`
+   - `choices[0].message.content` - format OpenAI
+
+3. **Jeśli n8n zwraca tablicę** (np. `[{output: "..."}]`):
+   - Widget automatycznie wyciągnie pierwszy element
+   - Upewnij się, że tablica nie jest pusta
+
+4. **Poprawne formaty w node "Respond to Webhook"**:
+```javascript
+// Opcja 1 (zalecana)
+return { json: { response: aiResponse } };
+
+// Opcja 2
+return { json: { output: aiResponse } };
+
+// Opcja 3
+return { json: { message: aiResponse } };
+```
+
+5. **Sprawdź czy n8n zwraca poprawny JSON**:
+   - Nie zwykły tekst
+   - Nie HTML
+   - JSON z jednym z obsługiwanych pól
 
 ## 📊 Monitoring i Analytics
 

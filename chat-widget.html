@@ -511,6 +511,23 @@
             chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
         }
 
+        // Extract message from n8n response (supports multiple formats)
+        function extractBotMessage(data) {
+            // If data is an array, get the first element
+            if (Array.isArray(data) && data.length > 0) {
+                data = data[0];
+            }
+
+            // Try different field names that n8n might return
+            return data.response ||
+                   data.message ||
+                   data.output ||
+                   data.text ||
+                   data.reply ||
+                   (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || // OpenAI format
+                   'Przepraszam, nie otrzymałem odpowiedzi.';
+        }
+
         // Send Message
         async function sendMessage() {
             const message = chatInput.value.trim();
@@ -558,8 +575,8 @@
                 // Remove typing indicator
                 typingIndicator.remove();
 
-                // Add bot response
-                const botMessage = data.response || data.message || 'Przepraszam, nie otrzymałem odpowiedzi.';
+                // Add bot response (supports multiple n8n response formats)
+                const botMessage = extractBotMessage(data);
                 addMessage(botMessage, 'bot');
 
             } catch (error) {

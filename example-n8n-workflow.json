@@ -52,7 +52,7 @@
     },
     {
       "parameters": {
-        "functionCode": "// Format response for chat widget\nconst aiResponse = $input.item.json.choices[0].message.content;\nconst sessionId = $input.first().json.sessionId;\n\nreturn {\n  json: {\n    response: aiResponse,\n    sessionId: sessionId,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "functionCode": "// Format response for chat widget\n// Widget supports multiple response formats:\n// - {response: \"...\"}\n// - {message: \"...\"}\n// - {output: \"...\"}\n// - [{output: \"...\"}]\n\nconst aiResponse = $input.item.json.choices[0].message.content;\nconst sessionId = $input.first().json.sessionId;\n\n// Option 1: Return as object with 'response' field (recommended)\nreturn {\n  json: {\n    response: aiResponse,\n    sessionId: sessionId,\n    timestamp: new Date().toISOString()\n  }\n};\n\n// Option 2: Return as object with 'output' field\n// return {\n//   json: {\n//     output: aiResponse,\n//     sessionId: sessionId\n//   }\n// };\n\n// Option 3: Return as object with 'message' field\n// return {\n//   json: {\n//     message: aiResponse,\n//     sessionId: sessionId\n//   }\n// };"
       },
       "name": "Format Response",
       "type": "n8n-nodes-base.function",
