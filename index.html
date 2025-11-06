@@ -119,6 +119,7 @@
             <li>✅ Animowane wskaźniki pisania</li>
             <li>✅ Responsywny design dla mobile i desktop</li>
             <li>✅ Automatyczne zarządzanie sesjami</li>
+            <li>✅ Rozciągalne okno - zmień rozmiar przeciągając krawędzie</li>
         </ul>
 
         <a href="https://github.com/DariuszCiesielski/ai-chat-widget" class="button">
@@ -126,29 +127,39 @@
         </a>
     </div>
 
-    <!-- AI Chat Widget - Loaded in iframe -->
-    <iframe
-        src="chat-widget.html"
-        style="
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 450px;
-            height: 700px;
-            border: none;
-            z-index: 9999;
-            pointer-events: none;
-        "
-        id="chatWidgetFrame"
-    ></iframe>
-
+    <!-- AI Chat Widget - Embedded directly -->
     <script>
-        // Make iframe content clickable
-        const iframe = document.getElementById('chatWidgetFrame');
-        iframe.addEventListener('load', function() {
-            // Enable pointer events on the iframe
-            iframe.style.pointerEvents = 'auto';
-        });
+        // Load the chat widget content directly
+        fetch('chat-widget.html')
+            .then(response => response.text())
+            .then(html => {
+                // Extract only the body content (widget elements and script)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Get the style tag
+                const styleTag = doc.querySelector('style');
+                if (styleTag) {
+                    document.head.appendChild(styleTag.cloneNode(true));
+                }
+
+                // Get the widget HTML
+                const widgetDiv = doc.querySelector('.chat-widget');
+                if (widgetDiv) {
+                    document.body.appendChild(widgetDiv.cloneNode(true));
+                }
+
+                // Get and execute the script
+                const scriptTag = doc.querySelector('script');
+                if (scriptTag) {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = scriptTag.textContent;
+                    document.body.appendChild(newScript);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load chat widget:', error);
+            });
     </script>
 
 </body>
