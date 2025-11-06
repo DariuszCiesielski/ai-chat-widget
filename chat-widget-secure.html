@@ -731,7 +731,7 @@
                     newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
                     break;
 
-                case 'corner-tl':
+                case 'top-left':
                     newWidth = startWidth - deltaX;
                     newHeight = startHeight - deltaY;
                     newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
@@ -740,7 +740,7 @@
                     newTop = startTop + (startHeight - newHeight);
                     break;
 
-                case 'corner-tr':
+                case 'top-right':
                     newWidth = startWidth + deltaX;
                     newHeight = startHeight - deltaY;
                     newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
@@ -748,7 +748,7 @@
                     newTop = startTop + (startHeight - newHeight);
                     break;
 
-                case 'corner-bl':
+                case 'bottom-left':
                     newWidth = startWidth - deltaX;
                     newHeight = startHeight + deltaY;
                     newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
@@ -756,13 +756,17 @@
                     newLeft = startLeft + (startWidth - newWidth);
                     break;
 
-                case 'corner-br':
+                case 'bottom-right':
                     newWidth = startWidth + deltaX;
                     newHeight = startHeight + deltaY;
                     newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
                     newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
                     break;
             }
+
+            // Constrain position to viewport boundaries
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - newHeight));
 
             // Apply new dimensions and position
             chatWindow.style.width = newWidth + 'px';

@@ -752,6 +752,10 @@
                     break;
             }
 
+            // Constrain position to viewport boundaries
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - newHeight));
+
             // Apply new dimensions and position
             chatWindow.style.width = newWidth + 'px';
             chatWindow.style.height = newHeight + 'px';
