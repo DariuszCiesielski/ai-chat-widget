@@ -89,12 +89,28 @@
             z-index: 10;
         }
 
+        .resize-handle-left {
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: ew-resize;
+        }
+
         .resize-handle-right {
             right: 0;
             top: 0;
             bottom: 0;
             width: 8px;
             cursor: ew-resize;
+        }
+
+        .resize-handle-top {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: ns-resize;
         }
 
         .resize-handle-bottom {
@@ -105,7 +121,31 @@
             cursor: ns-resize;
         }
 
-        .resize-handle-corner {
+        .resize-handle-corner-tl {
+            left: 0;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle-corner-tr {
+            right: 0;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle-corner-bl {
+            left: 0;
+            bottom: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle-corner-br {
             right: 0;
             bottom: 0;
             width: 16px;
@@ -113,7 +153,7 @@
             cursor: nwse-resize;
         }
 
-        .resize-handle-corner::after {
+        .resize-handle-corner-br::after {
             content: '';
             position: absolute;
             right: 2px;
@@ -501,9 +541,14 @@
             </div>
 
             <!-- Resize Handles -->
+            <div class="resize-handle resize-handle-left" id="resizeLeft"></div>
             <div class="resize-handle resize-handle-right" id="resizeRight"></div>
+            <div class="resize-handle resize-handle-top" id="resizeTop"></div>
             <div class="resize-handle resize-handle-bottom" id="resizeBottom"></div>
-            <div class="resize-handle resize-handle-corner" id="resizeCorner"></div>
+            <div class="resize-handle resize-handle-corner-tl" id="resizeCornerTL"></div>
+            <div class="resize-handle resize-handle-corner-tr" id="resizeCornerTR"></div>
+            <div class="resize-handle resize-handle-corner-bl" id="resizeCornerBL"></div>
+            <div class="resize-handle resize-handle-corner-br" id="resizeCornerBR"></div>
         </div>
     </div>
 
@@ -526,9 +571,14 @@
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const sendButton = document.getElementById('sendButton');
+        const resizeLeft = document.getElementById('resizeLeft');
         const resizeRight = document.getElementById('resizeRight');
+        const resizeTop = document.getElementById('resizeTop');
         const resizeBottom = document.getElementById('resizeBottom');
-        const resizeCorner = document.getElementById('resizeCorner');
+        const resizeCornerTL = document.getElementById('resizeCornerTL');
+        const resizeCornerTR = document.getElementById('resizeCornerTR');
+        const resizeCornerBL = document.getElementById('resizeCornerBL');
+        const resizeCornerBR = document.getElementById('resizeCornerBR');
 
         // State
         let isFullscreen = false;
@@ -538,12 +588,26 @@
         let startY = 0;
         let startWidth = 0;
         let startHeight = 0;
+        let startLeft = 0;
+        let startTop = 0;
 
         // Resize constraints
         const MIN_WIDTH = 320;
         const MIN_HEIGHT = 400;
         const MAX_WIDTH = 800;
         const MAX_HEIGHT = window.innerHeight * 0.9;
+
+        // Initialize chat window position
+        function initializeChatPosition() {
+            if (!chatWindow.style.left && !chatWindow.style.right) {
+                // Position in bottom-right by default
+                const rect = chatWindow.getBoundingClientRect();
+                chatWindow.style.left = (window.innerWidth - rect.width - 20) + 'px';
+                chatWindow.style.top = (window.innerHeight - rect.height - 20) + 'px';
+                chatWindow.style.right = 'auto';
+                chatWindow.style.bottom = 'auto';
+            }
+        }
 
         // Event Listeners
         chatButton.addEventListener('click', openChat);
@@ -554,9 +618,14 @@
         chatInput.addEventListener('input', autoResizeTextarea);
 
         // Resize event listeners
+        resizeLeft.addEventListener('mousedown', (e) => startResize(e, 'left'));
         resizeRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
+        resizeTop.addEventListener('mousedown', (e) => startResize(e, 'top'));
         resizeBottom.addEventListener('mousedown', (e) => startResize(e, 'bottom'));
-        resizeCorner.addEventListener('mousedown', (e) => startResize(e, 'corner'));
+        resizeCornerTL.addEventListener('mousedown', (e) => startResize(e, 'top-left'));
+        resizeCornerTR.addEventListener('mousedown', (e) => startResize(e, 'top-right'));
+        resizeCornerBL.addEventListener('mousedown', (e) => startResize(e, 'bottom-left'));
+        resizeCornerBR.addEventListener('mousedown', (e) => startResize(e, 'bottom-right'));
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', stopResize);
 
@@ -564,6 +633,7 @@
         function openChat() {
             chatWindow.classList.add('open');
             chatButton.style.display = 'none';
+            initializeChatPosition(); // Set initial position
             chatInput.focus();
         }
 
@@ -602,6 +672,8 @@
             startY = e.clientY;
             startWidth = chatWindow.offsetWidth;
             startHeight = chatWindow.offsetHeight;
+            startLeft = parseInt(chatWindow.style.left) || chatWindow.offsetLeft;
+            startTop = parseInt(chatWindow.style.top) || chatWindow.offsetTop;
 
             // Disable transition during resize
             chatWindow.style.transition = 'none';
@@ -620,26 +692,71 @@
 
             let newWidth = startWidth;
             let newHeight = startHeight;
+            let newLeft = startLeft;
+            let newTop = startTop;
 
-            // Calculate new dimensions based on resize type
-            if (resizeType === 'right' || resizeType === 'corner') {
-                newWidth = startWidth + deltaX;
-                newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+            // Calculate new dimensions and positions based on resize type
+            switch(resizeType) {
+                case 'left':
+                    newWidth = startWidth - deltaX;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    newLeft = startLeft + (startWidth - newWidth);
+                    break;
+
+                case 'right':
+                    newWidth = startWidth + deltaX;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    break;
+
+                case 'top':
+                    newHeight = startHeight - deltaY;
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+
+                case 'bottom':
+                    newHeight = startHeight + deltaY;
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    break;
+
+                case 'top-left':
+                    newWidth = startWidth - deltaX;
+                    newHeight = startHeight - deltaY;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    newLeft = startLeft + (startWidth - newWidth);
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+
+                case 'top-right':
+                    newWidth = startWidth + deltaX;
+                    newHeight = startHeight - deltaY;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+
+                case 'bottom-left':
+                    newWidth = startWidth - deltaX;
+                    newHeight = startHeight + deltaY;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    newLeft = startLeft + (startWidth - newWidth);
+                    break;
+
+                case 'bottom-right':
+                    newWidth = startWidth + deltaX;
+                    newHeight = startHeight + deltaY;
+                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
+                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
+                    break;
             }
 
-            if (resizeType === 'bottom' || resizeType === 'corner') {
-                newHeight = startHeight + deltaY;
-                newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
-            }
-
-            // Apply new dimensions
-            if (resizeType === 'right' || resizeType === 'corner') {
-                chatWindow.style.width = newWidth + 'px';
-            }
-
-            if (resizeType === 'bottom' || resizeType === 'corner') {
-                chatWindow.style.height = newHeight + 'px';
-            }
+            // Apply new dimensions and position
+            chatWindow.style.width = newWidth + 'px';
+            chatWindow.style.height = newHeight + 'px';
+            chatWindow.style.left = newLeft + 'px';
+            chatWindow.style.top = newTop + 'px';
         }
 
         function stopResize() {
