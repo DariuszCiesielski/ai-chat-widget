@@ -7,7 +7,22 @@ Nowoczesny widget chatu HTML z integracją webhooków n8n do komunikacji z agent
 [![GitHub forks](https://img.shields.io/github/forks/DariuszCiesielski/ai-chat-widget)](https://github.com/DariuszCiesielski/ai-chat-widget/network)
 [![GitHub issues](https://img.shields.io/github/issues/DariuszCiesielski/ai-chat-widget)](https://github.com/DariuszCiesielski/ai-chat-widget/issues)
 
-[🚀 Live Demo](https://dariuszciesielski.github.io/ai-chat-widget/) | [📖 Documentation](#-szybki-start) | [💡 Examples](#-przykładowy-workflow-n8n)
+[🚀 Live Demo](https://dariuszciesielski.github.io/ai-chat-widget/) | [📖 Documentation](#-szybki-start) | [💡 Examples](#-przykładowy-workflow-n8n) | [🔒 Security](SECURITY.md)
+
+## ⚠️ Ważne - Bezpieczeństwo
+
+**Dostępne są dwie wersje widgetu:**
+
+- **`chat-widget.html`** - Podstawowa wersja, prosta i łatwa w użyciu
+- **`chat-widget-secure.html`** - Wersja zabezpieczona z dodatkowymi funkcjami:
+  - ✅ Ochrona przed XSS (sanityzacja HTML)
+  - ✅ Rate limiting (10 wiadomości/minutę)
+  - ✅ Walidacja inputu (max 1000 znaków)
+  - ✅ Bezpieczne generowanie Session ID
+
+📖 **[Przeczytaj pełną dokumentację bezpieczeństwa →](SECURITY.md)**
+
+⚠️ **UWAGA**: Przed wdrożeniem produkcyjnym zapoznaj się z [SECURITY.md](SECURITY.md) i wdróż dodatkowe zabezpieczenia!
 
 ## 🎯 Funkcje
 
