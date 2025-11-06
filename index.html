@@ -104,9 +104,10 @@
         </div>
 
         <div class="note">
-            <strong>Uwaga:</strong> Aby widget działał poprawnie, musisz skonfigurować
-            <code>webhookUrl</code> w pliku <code>chat-widget.html</code> na URL
-            swojego webhooka n8n.
+            <strong>Demo:</strong> To jest demonstracyjna wersja widgetu.
+            Widget pojawi się w prawym dolnym rogu. Aby w pełni działał,
+            musisz skonfigurować <code>webhookUrl</code> na URL swojego webhooka n8n.
+            Zobacz <a href="https://github.com/DariuszCiesielski/ai-chat-widget" style="color: #f39c12; text-decoration: underline;">dokumentację</a>.
         </div>
 
         <p>
@@ -125,32 +126,29 @@
         </a>
     </div>
 
-    <!-- AI Chat Widget - Load via JavaScript -->
+    <!-- AI Chat Widget - Loaded in iframe -->
+    <iframe
+        src="chat-widget.html"
+        style="
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 450px;
+            height: 700px;
+            border: none;
+            z-index: 9999;
+            pointer-events: none;
+        "
+        id="chatWidgetFrame"
+    ></iframe>
+
     <script>
-        // Load chat widget from chat-widget.html
-        fetch('chat-widget.html')
-            .then(response => response.text())
-            .then(html => {
-                // Extract just the widget HTML (everything in body)
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                // Get the style and script from the widget
-                const widgetStyle = doc.querySelector('style');
-                const widgetScript = doc.querySelector('script');
-                const widgetContent = doc.querySelector('.chat-widget');
-
-                if (widgetStyle) document.head.appendChild(widgetStyle);
-                if (widgetContent) document.body.appendChild(widgetContent);
-                if (widgetScript) {
-                    const newScript = document.createElement('script');
-                    newScript.textContent = widgetScript.textContent;
-                    document.body.appendChild(newScript);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading chat widget:', error);
-            });
+        // Make iframe content clickable
+        const iframe = document.getElementById('chatWidgetFrame');
+        iframe.addEventListener('load', function() {
+            // Enable pointer events on the iframe
+            iframe.style.pointerEvents = 'auto';
+        });
     </script>
 
 </body>

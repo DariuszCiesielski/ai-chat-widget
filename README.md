@@ -7,7 +7,7 @@ Nowoczesny widget chatu HTML z integracją webhooków n8n do komunikacji z agent
 [![GitHub forks](https://img.shields.io/github/forks/DariuszCiesielski/ai-chat-widget)](https://github.com/DariuszCiesielski/ai-chat-widget/network)
 [![GitHub issues](https://img.shields.io/github/issues/DariuszCiesielski/ai-chat-widget)](https://github.com/DariuszCiesielski/ai-chat-widget/issues)
 
-[🚀 Live Demo](https://dariuszciesielski.github.io/ai-chat-widget/example.html) | [📖 Documentation](#-szybki-start) | [💡 Examples](#-przykładowy-workflow-n8n)
+[🚀 Live Demo](https://dariuszciesielski.github.io/ai-chat-widget/) | [📖 Documentation](#-szybki-start) | [💡 Examples](#-przykładowy-workflow-n8n)
 
 ## 🎯 Funkcje
 
