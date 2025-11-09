@@ -189,6 +189,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            cursor: grab;
+            user-select: none;
         }
 
         .chat-header-content {
@@ -494,7 +496,7 @@
         <!-- Chat Window -->
         <div class="chat-window" id="chatWindow">
             <!-- Header -->
-            <div class="chat-header">
+            <div class="chat-header" id="chatHeader">
                 <div class="chat-header-content">
                     <div class="chat-avatar">🤖</div>
                     <div class="chat-header-text">
@@ -575,6 +577,7 @@
         // DOM Elements
         const chatButton = document.getElementById('chatButton');
         const chatWindow = document.getElementById('chatWindow');
+        const chatHeader = document.getElementById('chatHeader');
         const closeButton = document.getElementById('closeButton');
         const fullscreenButton = document.getElementById('fullscreenButton');
         const chatMessages = document.getElementById('chatMessages');
@@ -593,6 +596,7 @@
         let isFullscreen = false;
         let isResizing = false;
         let resizeType = null;
+        let isDragging = false;
         let startX = 0;
         let startY = 0;
         let startWidth = 0;
@@ -647,6 +651,11 @@
         resizeCornerBR.addEventListener('mousedown', (e) => startResize(e, 'bottom-right'));
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', stopResize);
+
+        // Drag to move event listeners
+        chatHeader.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('mouseup', stopDrag);
 
         // Open Chat
         function openChat() {
@@ -734,81 +743,54 @@
             let newLeft = startLeft;
             let newTop = startTop;
 
-            // Calculate new dimensions and position based on resize type
+            // Calculate new dimensions based on resize type
             switch(resizeType) {
                 case 'left':
                     newWidth = startWidth - deltaX;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
-                    newLeft = startLeft + (startWidth - newWidth);
+                    newLeft = startLeft + deltaX;
                     break;
 
                 case 'right':
                     newWidth = startWidth + deltaX;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
                     break;
 
                 case 'top':
                     newHeight = startHeight - deltaY;
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
-                    newTop = startTop + (startHeight - newHeight);
+                    newTop = startTop + deltaY;
                     break;
 
                 case 'bottom':
                     newHeight = startHeight + deltaY;
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
                     break;
 
                 case 'top-left':
                     newWidth = startWidth - deltaX;
                     newHeight = startHeight - deltaY;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
-                    newLeft = startLeft + (startWidth - newWidth);
-                    newTop = startTop + (startHeight - newHeight);
+                    newLeft = startLeft + deltaX;
+                    newTop = startTop + deltaY;
                     break;
 
                 case 'top-right':
                     newWidth = startWidth + deltaX;
                     newHeight = startHeight - deltaY;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
-                    newTop = startTop + (startHeight - newHeight);
+                    newTop = startTop + deltaY;
                     break;
 
                 case 'bottom-left':
                     newWidth = startWidth - deltaX;
                     newHeight = startHeight + deltaY;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
-                    newLeft = startLeft + (startWidth - newWidth);
+                    newLeft = startLeft + deltaX;
                     break;
 
                 case 'bottom-right':
                     newWidth = startWidth + deltaX;
                     newHeight = startHeight + deltaY;
-                    newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, MAX_WIDTH));
-                    newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, MAX_HEIGHT));
                     break;
             }
 
-            // Adjust if window would go outside viewport bounds
-            // Allow growing to full viewport size
-            if (newLeft < 0) {
-                newWidth = newWidth + newLeft; // Increase width to compensate
-                newLeft = 0;
-            }
-            if (newTop < 0) {
-                newHeight = newHeight + newTop; // Increase height to compensate
-                newTop = 0;
-            }
-
-            // Ensure window doesn't extend beyond right/bottom viewport
-            if (newLeft + newWidth > window.innerWidth) {
-                newWidth = window.innerWidth - newLeft;
-            }
-            if (newTop + newHeight > window.innerHeight) {
-                newHeight = window.innerHeight - newTop;
-            }
+            // Apply constraints
+            newWidth = Math.max(MIN_WIDTH, newWidth);
+            newHeight = Math.max(MIN_HEIGHT, newHeight);
 
             // Apply new dimensions and position
             chatWindow.style.width = newWidth + 'px';
@@ -828,6 +810,57 @@
 
             // Re-enable text selection
             document.body.style.userSelect = '';
+        }
+
+        // Drag to Move Functions
+        function startDrag(e) {
+            if (isFullscreen) return; // Disable drag in fullscreen
+            if (e.target.closest('button')) return; // Don't drag when clicking buttons
+
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = parseInt(chatWindow.style.left) || chatWindow.offsetLeft;
+            startTop = parseInt(chatWindow.style.top) || chatWindow.offsetTop;
+
+            // Disable transition during drag
+            chatWindow.style.transition = 'none';
+
+            // Add user-select: none to prevent text selection during drag
+            document.body.style.userSelect = 'none';
+
+            // Change cursor
+            chatHeader.style.cursor = 'grabbing';
+        }
+
+        function doDrag(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            const newLeft = startLeft + deltaX;
+            const newTop = startTop + deltaY;
+
+            chatWindow.style.left = newLeft + 'px';
+            chatWindow.style.top = newTop + 'px';
+        }
+
+        function stopDrag() {
+            if (!isDragging) return;
+
+            isDragging = false;
+
+            // Re-enable transition
+            chatWindow.style.transition = '';
+
+            // Re-enable text selection
+            document.body.style.userSelect = '';
+
+            // Reset cursor
+            chatHeader.style.cursor = 'grab';
         }
 
         // Handle Enter Key
