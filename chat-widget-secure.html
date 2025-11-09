@@ -664,6 +664,17 @@
             isFullscreen = !isFullscreen;
             chatWindow.classList.toggle('fullscreen');
 
+            if (isFullscreen) {
+                // Remove inline styles to allow CSS fullscreen to work
+                chatWindow.style.width = '';
+                chatWindow.style.height = '';
+                chatWindow.style.left = '';
+                chatWindow.style.top = '';
+            } else {
+                // Restore position when exiting fullscreen
+                initializeChatPosition();
+            }
+
             // Update fullscreen icon
             const icon = isFullscreen
                 ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
@@ -765,9 +776,24 @@
                     break;
             }
 
-            // Constrain position to viewport boundaries
-            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth));
-            newTop = Math.max(0, Math.min(newTop, window.innerHeight - newHeight));
+            // Adjust if window would go outside viewport bounds
+            // Allow growing to full viewport size
+            if (newLeft < 0) {
+                newWidth = newWidth + newLeft; // Increase width to compensate
+                newLeft = 0;
+            }
+            if (newTop < 0) {
+                newHeight = newHeight + newTop; // Increase height to compensate
+                newTop = 0;
+            }
+
+            // Ensure window doesn't extend beyond right/bottom viewport
+            if (newLeft + newWidth > window.innerWidth) {
+                newWidth = window.innerWidth - newLeft;
+            }
+            if (newTop + newHeight > window.innerHeight) {
+                newHeight = window.innerHeight - newTop;
+            }
 
             // Apply new dimensions and position
             chatWindow.style.width = newWidth + 'px';
