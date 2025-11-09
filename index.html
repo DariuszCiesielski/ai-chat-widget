@@ -592,6 +592,12 @@
         let startLeft = 0;
         let startTop = 0;
 
+        // Save position/size before fullscreen
+        let beforeFullscreenWidth = '';
+        let beforeFullscreenHeight = '';
+        let beforeFullscreenLeft = '';
+        let beforeFullscreenTop = '';
+
         // Resize constraints
         const MIN_WIDTH = 320;
         const MIN_HEIGHT = 400;
@@ -653,14 +659,23 @@
             chatWindow.classList.toggle('fullscreen');
 
             if (isFullscreen) {
+                // Save current position and size before entering fullscreen
+                beforeFullscreenWidth = chatWindow.style.width;
+                beforeFullscreenHeight = chatWindow.style.height;
+                beforeFullscreenLeft = chatWindow.style.left;
+                beforeFullscreenTop = chatWindow.style.top;
+
                 // Remove inline styles to allow CSS fullscreen to work
                 chatWindow.style.width = '';
                 chatWindow.style.height = '';
                 chatWindow.style.left = '';
                 chatWindow.style.top = '';
             } else {
-                // Restore position when exiting fullscreen
-                initializeChatPosition();
+                // Restore previous position and size when exiting fullscreen
+                chatWindow.style.width = beforeFullscreenWidth;
+                chatWindow.style.height = beforeFullscreenHeight;
+                chatWindow.style.left = beforeFullscreenLeft;
+                chatWindow.style.top = beforeFullscreenTop;
             }
 
             // Update fullscreen icon
